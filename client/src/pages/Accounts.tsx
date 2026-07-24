@@ -142,6 +142,8 @@ const Accounts = () => {
         })}
       </div>
 
+      {isLoading && <div></div>}
+
       {/* connect platform modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center p-4 z-50">
