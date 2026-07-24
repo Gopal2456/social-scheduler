@@ -273,7 +273,7 @@ const Scheduler = () => {
             disabled={
               loading || !content.trim() || selectedPlatforms.length === 0
             }
-            className="w-full bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white  rounded-lg py-3 flex items-center justify-center gap-2 transition-colors"
+            className="w-full bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white  rounded-lg py-2.5 flex items-center justify-center gap-2 transition-colors"
           >
             {loading ? "Scheduling..." : "Schedule Post"}
             <ArrowRight size={16} />
