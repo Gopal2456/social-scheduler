@@ -92,7 +92,7 @@ const AIComposer = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 px-6 py-12">
+    <div className="min-h-screen bg-slate-50 py-12">
       <div className="mx-auto max-w-4xl">
         {/* ---------- Composer ---------- */}
         <h1 className="text-center text-3xl  tracking-tight text-slate-700">
@@ -105,16 +105,15 @@ const AIComposer = () => {
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Share your idea... (e.g. A post about the launch of our new eco-friendly coffee beans)"
             rows={4}
-            className="w-full resize-none bg-transparent text-[16px] text-slate-700 placeholder:text-slate-400 focus:outline-none"
+            className="w-full resize-none bg-transparent text-[14px] sm:text-[16px] text-slate-700 placeholder:text-slate-400 focus:outline-none"
           />
 
-          <div className="mt-2 flex items-center justify-end gap-3">
+          <div className="mt-2 flex items-center justify-between sm:justify-end gap-3">
             <button
               type="button"
               onClick={() => setGenerateImage((v) => !v)}
               className="flex items-center gap-2 rounded-lg bg-red-50 py-2 pl-3 pr-1.5 text-sm text-slate-800"
             >
-              {/* <ImageIcon className="h-4 w-4 text-slate-400" /> */}
               AI Image
               <span
                 className={`relative h-5 w-9 rounded-full transition-colors ${
