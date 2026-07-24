@@ -83,18 +83,19 @@ const Accounts = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">
+          <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">
             Connected Accounts
           </h2>
-          <p className="text-slate-500 mt-0.5">
+          <p className="mt-0.5 text-sm text-slate-500 sm:text-base">
             {accounts.length} of {PLATFORMS.length} platforms connected
           </p>
         </div>
+
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white font-medium text-sm px-5 py-2.5 rounded-full transition-colors"
+          className="flex w-full items-center justify-center gap-1.5 rounded-full bg-red-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-600 sm:w-auto"
         >
           <PlusIcon className="size-4" />
           Connect Account

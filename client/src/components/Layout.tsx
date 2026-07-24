@@ -30,9 +30,9 @@ const Layout = () => {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* top bar */}
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2 sm:px-6 lg:px-8">
+        <header className="flex items-center gap-4 border-b border-slate-200 bg-white px-4 py-2 sm:px-6 lg:px-8">
           <button
-            className="text-slate-500 focus:outline-none md:hidden"
+            className="text-slate-500 py-3 focus:outline-none md:hidden"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={
               isMobileMenuOpen
@@ -46,7 +46,8 @@ const Layout = () => {
 
           <div>
             <h1 className="text-lg text-slate-800">{title}</h1>
-            <p className="text-sm text-slate-500">
+            
+            <p className="text-sm hidden sm:block text-slate-500">
               Manage and automate your social media posts
             </p>
           </div>

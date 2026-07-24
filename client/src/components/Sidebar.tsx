@@ -72,7 +72,7 @@ const Sidebar = ({
               />
               {item.name}
               {isActive && (
-                <span className="ml-auto w-[5px] h-5 rounded-full bg-red-500" />
+                <span className="ml-auto w-1.5 h-5 rounded-full bg-red-500" />
               )}
             </NavLink>
           );
