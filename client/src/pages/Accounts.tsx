@@ -4,27 +4,19 @@ import {
   Unplug,
   PlusIcon,
   XIcon,
+  Plus,
+  LoaderCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { dummyAccountsData, PLATFORMS } from "../assets/assets";
-
-interface ConnectedAccount {
-  _id: string;
-  zernioAccountId: string;
-  handle: string;
-  platform: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  user: string;
-}
+import { PLATFORMS } from "../assets/assets";
+import { toast } from "react-hot-toast";
+import api from "../api/axios";
 
 const Accounts = () => {
-  // Seed state straight from dummyAccountsData instead of a hardcoded duplicate array
-  const [accounts, setAccounts] =
-    useState<ConnectedAccount[]>(dummyAccountsData);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [connection, setConnection] = useState<string | null>(null);
 
   const fetchAccounts = async (
     isSync = false,
@@ -33,51 +25,86 @@ const Accounts = () => {
   ) => {
     setIsLoading(true);
     try {
-      const data = platform
-        ? dummyAccountsData.filter((a) => a._id === platform)
-        : dummyAccountsData;
-
-      setAccounts(data);
-
-      if (isSync && successMsg) {
-        console.log(successMsg);
+      if (isSync) {
+        const label = platform
+          ? platform.charAt(0).toUpperCase() + platform.slice(1)
+          : "Social Media";
+        toast.loading(`Syncing ${label} accounts...`, { id: "sync" });
+        await api.get("/api/oauth/sync");
+        toast.success(successMsg || `Accounts synced successfully!`, {
+          id: "sync",
+        });
       }
+      const { data } = await api.get("/api/accounts");
+      setAccounts(data);
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to fetch accounts.",
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAccounts();
+    const params = new URLSearchParams(window.location.search);
+    const connectedPlatform = params.get("connected");
+    const connectedUsername = params.get("username");
+    const syncNeeded = params.get("sync") === "true";
+    const errorMsg = params.get("error");
+
+    window.history.replaceState({}, document.title, window.location.pathname);
+    if (connectedPlatform) {
+      const label =
+        connectedPlatform.charAt(0).toUpperCase() + connectedPlatform.slice(1);
+      const handle = connectedUsername ? `@${connectedUsername}` : "";
+      fetchAccounts(
+        true,
+        connectedPlatform,
+        `${label} account ${handle} connected successfully!`,
+      );
+    } else if (errorMsg) {
+      toast.error(`Connection failed: ${decodeURIComponent(errorMsg)}`);
+      fetchAccounts();
+    } else if (syncNeeded) {
+      fetchAccounts(true, null, "Accounts synced successfully!");
+    } else {
+      fetchAccounts();
+    }
   }, []);
 
   const isConnected = (platformId: string) =>
     accounts.some((a) => a.platform === platformId);
 
-  type Platform = (typeof PLATFORMS)[number];
-
-  const handleConnect = (platform: Platform) => {
-    if (isConnected(platform.id)) return;
-
-    setAccounts((prev) => [
-      ...prev,
-      {
-        _id: crypto.randomUUID(),
-        zernioAccountId: crypto.randomUUID(),
-        handle: "greatstack",
-        platform: platform.id,
-        status: "connected",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        user: "demo-user",
-      },
-    ]);
-
-    setIsModalOpen(false);
+  const handleConnect = async (platformId: string) => {
+    setConnection(platformId);
+    try {
+      const { data } = await api.get(`/api/oauth/${platformId}/url`);
+      window.location.href = data.url;
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          error.message ||
+          `Failed to connect ${platformId}`,
+      );
+      setConnection(null);
+    }
   };
 
-  const handleDisconnect = (_id: string) => {
-    setAccounts((prev) => prev.filter((a) => a._id !== _id));
+  const handleDisconnect = async (accountId: string) => {
+    try {
+      await api.delete(`/api/accounts/${accountId}`);
+      toast.success("Account disconnected");
+      await fetchAccounts();
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to disconnect account",
+      );
+    }
   };
 
   return (
@@ -103,6 +130,28 @@ const Accounts = () => {
       </div>
 
       {/* connected accounts grid */}
+      {accounts.length === 0 && (
+        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-16 text-center">
+          <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50">
+            <button>
+              <Plus
+                onClick={() => setIsModalOpen(true)}
+                className="h-6 w-6 text-rose-500"
+                strokeWidth={1.75}
+              />
+            </button>
+          </div>
+
+          <h3 className="text-base font-semibold text-slate-800">
+            No accounts connected
+          </h3>
+          <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-slate-500">
+            Connect your social accounts to schedule posts and track performance
+            from one place.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {accounts.map((account) => {
           const platform = PLATFORMS.find((p) => p.id === account.platform);
@@ -143,7 +192,11 @@ const Accounts = () => {
         })}
       </div>
 
-      {isLoading && <div></div>}
+      {isLoading && (
+        <div className="flex items-center justify-center py-10 text-sm text-slate-400">
+          Loading accounts…
+        </div>
+      )}
 
       {/* connect platform modal */}
       {isModalOpen && (
@@ -169,8 +222,8 @@ const Accounts = () => {
                 return (
                   <button
                     key={platform.id}
-                    onClick={() => handleConnect(platform)}
-                    disabled={connected}
+                    onClick={() => handleConnect(platform.id)}
+                    disabled={connected || connection === platform.id}
                     className={`w-full flex items-center justify-between rounded-xl px-4 py-3.5 text-left transition-colors ${
                       connected
                         ? "bg-red-50 cursor-default"
@@ -204,7 +257,9 @@ const Accounts = () => {
                         </p>
                       </div>
                     </div>
-                    {connected ? (
+                    {connection === platform.id ? (
+                      <LoaderCircle className="size-5 text-red-500 animate-spin shrink-0" />
+                    ) : connected ? (
                       <CheckCircleIcon className="size-5 text-red-500 shrink-0" />
                     ) : (
                       <ExternalLinkIcon className="size-4 text-slate-400 shrink-0" />
