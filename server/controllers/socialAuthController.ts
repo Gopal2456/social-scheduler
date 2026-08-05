@@ -92,8 +92,15 @@ export const syncAccounts = async (
     });
 
     const data = result.data as any;
-    const zernioAccounts: any[] =
-      data?.accounts || Array.isArray(data) ? data : [];
+
+    const zernioAccounts: any[] = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.accounts)
+        ? data.accounts
+        : Array.isArray(data?.data)
+          ? data.data
+          : [];
+
     const supportedPlatforms = ["twitter", "linkedin", "facebook", "instagram"];
     const syncAccounts = [];
 
@@ -119,22 +126,25 @@ export const syncAccounts = async (
       }
 
       const account = await Account.findOneAndUpdate(
-        {zernioAccountId: zid},
+        { zernioAccountId: zid },
         {
-            user: req.user._id,
-            platform: normalizedPlatform,
-            handle: zAccount.username || zAccount.name || zAccount.handle || "Unknown",
-            zernioAccountId:zid,
-            status:"connected",
-            avatarUrl: zAccount.avatarUrl || zAccount.picture || zAccount.profile_image_url,
-
+          user: req.user._id,
+          platform: normalizedPlatform,
+          handle:
+            zAccount.username || zAccount.name || zAccount.handle || "Unknown",
+          zernioAccountId: zid,
+          status: "connected",
+          avatarUrl:
+            zAccount.avatarUrl ||
+            zAccount.picture ||
+            zAccount.profile_image_url,
         },
-        {upsert:true, returnDocument: 'after'}
-      )
-      syncAccounts.push(account)
+        { upsert: true, returnDocument: "after" },
+      );
+      syncAccounts.push(account);
     }
-    res.json(syncAccounts)
+    res.json(syncAccounts);
   } catch (error: any) {
-        res.status(500).json({message: error?.message || "Server error"});
+    res.status(500).json({ message: error?.message || "Server error" });
   }
 };
