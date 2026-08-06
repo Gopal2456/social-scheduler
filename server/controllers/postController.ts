@@ -148,8 +148,7 @@ export const generatePost = async (
       tone,
     });
 
-    res.json(generation)
-
+    res.json(generation);
   } catch (error: any) {
     res.status(500).json({ message: error?.message || "Server error" });
   }
@@ -187,27 +186,109 @@ export const getPosts = async (
 
 // Schedule Post
 // POST /api/posts/
+// export const schedulePost = async (
+//   req: AuthRequest,
+//   res: Response,
+// ): Promise<void> => {
+//   try {
+//     const { content, status, platform, scheduledFor } = req.body;
+
+//     let parsedPlatform = platform;
+
+//     if (typeof platform === "string") {
+//       try {
+//         parsedPlatform = JSON.parse(platform);
+//       } catch {
+//         parsedPlatform = platform.split(",");
+//       }
+//     }
+
+//     let mediaUrl: string | undefined = req.body.mediaUrl;
+//     let mediaType: "image" | "video" | undefined = req.body.mediaType;
+
+//     if (req.file) {
+//       const result = await new Promise<any>((resolve, reject) => {
+//         const stream = cloudinary.uploader.upload_stream(
+//           {
+//             folder: "social-scheduler/posts",
+//             resource_type: "auto",
+//           },
+//           (error, result) => {
+//             if (error) {
+//               reject(error);
+//             } else {
+//               resolve(result);
+//             }
+//           },
+//         );
+
+//         stream.end(req.file!.buffer);
+//       });
+
+//       mediaUrl = result.secure_url;
+//       mediaType = result.resource_type === "video" ? "video" : "image";
+//     }
+
+//     const post = await Post.create({
+//       user: req.user?._id,
+//       content,
+//       mediaUrl,
+//       mediaType,
+//       platform: parsedPlatform,
+//       scheduledFor,
+//       status,
+//     });
+
+//     res.status(201).json(post);
+//   } catch (error: any) {
+//     console.error(error);
+//     console.error(error.stack);
+
+//     res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+//   // } catch (error: any) {
+//   //   res.status(500).json({
+//   //     message: error?.message || "Server error",
+//   //   });
+//   // }
+// };
+
 export const schedulePost = async (
   req: AuthRequest,
   res: Response,
-): Promise<void> => {
+): Promise<any> => {
   try {
+    console.log("========== SCHEDULE POST START ==========");
+    console.log("Request body:", req.body);
+    console.log("User:", req.user?._id);
+    console.log("Has file:", !!req.file);
+
     const { content, status, platform, scheduledFor } = req.body;
 
     let parsedPlatform = platform;
 
+    console.log("Raw platform:", platform);
+
     if (typeof platform === "string") {
       try {
         parsedPlatform = JSON.parse(platform);
+        console.log("Platform parsed as JSON:", parsedPlatform);
       } catch {
         parsedPlatform = platform.split(",");
+        console.log("Platform parsed by split:", parsedPlatform);
       }
     }
 
     let mediaUrl: string | undefined = req.body.mediaUrl;
     let mediaType: "image" | "video" | undefined = req.body.mediaType;
 
+    console.log("Initial mediaUrl:", mediaUrl);
+
     if (req.file) {
+      console.log("Uploading file to Cloudinary...");
+
       const result = await new Promise<any>((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           {
@@ -216,19 +297,25 @@ export const schedulePost = async (
           },
           (error, result) => {
             if (error) {
+              console.error("Cloudinary upload error:", error);
               reject(error);
             } else {
+              console.log("Cloudinary upload success");
               resolve(result);
             }
-          }
+          },
         );
 
         stream.end(req.file!.buffer);
       });
 
+      console.log("Cloudinary result:", result);
+
       mediaUrl = result.secure_url;
       mediaType = result.resource_type === "video" ? "video" : "image";
     }
+
+    console.log("Creating MongoDB post...");
 
     const post = await Post.create({
       user: req.user?._id,
@@ -240,10 +327,30 @@ export const schedulePost = async (
       status,
     });
 
-    res.status(201).json(post);
+    console.log("MongoDB post created successfully");
+    console.log(post);
+
+    console.log("========== SCHEDULE POST SUCCESS ==========");
+
+    return res.status(201).json(post);
   } catch (error: any) {
-    res.status(500).json({
-      message: error?.message || "Server error",
+    console.log("========== SCHEDULE POST ERROR ==========");
+
+    console.error("Name:", error?.name);
+    console.error("Message:", error?.message);
+    console.error("HTTP Code:", error?.http_code);
+
+    console.error("Stack:");
+    console.error(error?.stack);
+
+    console.error("Entire error:");
+    console.dir(error, { depth: null });
+
+    return res.status(500).json({
+      success: false,
+      message: error?.message,
+      name: error?.name,
+      http_code: error?.http_code,
     });
   }
 };
