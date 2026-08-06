@@ -11,7 +11,7 @@ export const initScheduler = () => {
     try {
       const now = new Date();
       const postsToPublish = await Post.find({
-        scheduledTime: { $lte: now },
+        // scheduledTime: { $lte: now },
         status: "scheduled",
         scheduledFor: { $lte: now },
       });
@@ -24,7 +24,18 @@ export const initScheduler = () => {
 
           const accounts = await Account.find({
             user: post.user,
-            platform: { $in: platforms },
+            // platform: { $in: platforms },
+            platform: {
+              $in: platforms as (
+                | "linkedin"
+                | "twitter"
+                | "facebook"
+                | "instagram"
+                | "facebook_page"
+                | "linkedin_page"
+                | "instagram_business"
+              )[],
+            },
             status: "connected",
             zernioAccountId: { $exists: true },
           });
@@ -37,7 +48,7 @@ export const initScheduler = () => {
           }
 
           const zernioPlatforms = accounts.map((acc) => ({
-            tform: acc.platform as any,
+            platform: acc.platform as any,
             accountId: acc.zernioAccountId,
           }));
 

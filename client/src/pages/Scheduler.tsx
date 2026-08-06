@@ -7,7 +7,9 @@ import {
   X,
   Image as ImageIcon,
 } from "lucide-react";
-import { dummyPostsData, PLATFORMS } from "../assets/assets";
+import { PLATFORMS } from "../assets/assets";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 
 const CHAR_LIMIT = 280;
 
@@ -37,12 +39,17 @@ const Scheduler = () => {
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
 
   const fetchPosts = async () => {
-    setPosts(dummyPostsData);
+    try {
+      const { data } = await api.get("/api/posts");
+      setPosts(data);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message);
+    }
   };
 
   useEffect(() => {
     (async () => fetchPosts())();
-    const interval = setInterval(async () => await fetchPosts(), 1000);
+    const interval = setInterval(async () => await fetchPosts(), 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -81,17 +88,44 @@ const Scheduler = () => {
   }, [mediaPreview]);
 
   const handleSchedulePost = async () => {
-    if (!content.trim() || selectedPlatforms.length === 0) return;
+    if (selectedPlatforms.length === 0) {
+      toast.error("Select at least one platform");
+      return;
+    }
+    if (!scheduleDate || !scheduleTime) {
+      toast.error("Select date and time");
+      return;
+    }
+    if (selectedPlatforms.includes("instagram") && !mediaFile) {
+      toast.error("Instagram requires an image or video");
+      return;
+    }
+
+    const scheduledFor = new Date(
+      `${scheduleDate}T${scheduleTime}`,
+    ).toISOString();
+    const formData = new FormData();
+    formData.append("content", content);
+    formData.append("scheduledFor", scheduledFor);
+    formData.append("status", "scheduled");
+    formData.append("platform", JSON.stringify(selectedPlatforms));
+    if (mediaFile) formData.append("media", mediaFile);
+
     setLoading(true);
+
     try {
-      // TODO: wire up to actual API call
-      console.log({
-        content,
-        selectedPlatforms,
-        mediaFile,
-        scheduleDate,
-        scheduleTime,
+      await api.post("/api/posts", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+      toast.success("Post scheduled!");
+      setContent("");
+      setScheduleDate("");
+      setScheduleTime("");
+      setSelectedPlatforms([]);
+      setMediaFile(null);
+      fetchPosts();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message);
     } finally {
       setLoading(false);
     }
@@ -293,8 +327,8 @@ const Scheduler = () => {
               </span>
             </div>
             {upcoming.length === 0 ? (
-              <p className="px-6 py-6 text-sm text-gray-400">
-                No upcoming posts scheduled.
+              <p className="px-6 py-6 text-sm text-center text-gray-400">
+                No posts scheduled yet.
               </p>
             ) : (
               upcoming.map((post) => <PostCard key={post._id} post={post} />)
@@ -311,11 +345,17 @@ const Scheduler = () => {
                 {published.length}
               </span>
             </div>
-            <div className="max-h-72 overflow-y-auto">
-              {published.map((post) => (
-                <PostCard key={post._id} post={post} />
-              ))}
-            </div>
+            {published.length === 0 ? (
+              <p className="px-6 py-6 text-sm text-center text-gray-400">
+                No published posts yet.
+              </p>
+            ) : (
+              <div className="max-h-72 overflow-y-auto">
+                {published.map((post) => (
+                  <PostCard key={post._id} post={post} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
