@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { dummyGenerationData, PLATFORMS } from "../assets/assets";
+import { PLATFORMS } from "../assets/assets";
 import {
   History,
   Loader2,
@@ -9,6 +9,8 @@ import {
   Clock,
   Timer,
 } from "lucide-react";
+import toast from "react-hot-toast";
+import api from "../api/axios";
 
 type Generation = {
   _id: string;
@@ -41,7 +43,12 @@ const AIComposer = () => {
   const [scheduling, setScheduling] = useState(false);
 
   const fetchGenerations = async () => {
-    setGenerations(dummyGenerationData as Generation[]);
+    try {
+      const { data } = await api.get("api/posts/generations");
+      setGenerations(data);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message);
+    }
   };
 
   useEffect(() => {
@@ -55,11 +62,64 @@ const AIComposer = () => {
       year: "numeric",
     });
 
-  const handleGenerate = () => {
-    if (!prompt.trim() || loading) return;
+  const handleGenerate = async () => {
+    if (!prompt) {
+      toast.error("Please enter a prompt");
+      return;
+    }
     setLoading(true);
-    // placeholder for real generation call
-    setTimeout(() => setLoading(false), 1800);
+    try {
+      const { data } = await api.post("/api/posts/generate", {
+        prompt,
+        tone,
+        generateImage,
+      });
+      setGenerations([data, ...generations]);
+      setActiveScheduler(data);
+      toast.success("Content generated!");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSchedule = async () => {
+    if (!activeScheduler) return;
+    if (selectedPlatforms.length === 0) {
+      toast.error("Select at least one platform");
+      return;
+    }
+    {
+      if (!scheduledDate || !scheduledTime) {
+        toast.error("Select date and time");
+        return;
+      }
+
+      const scheduledFor = new Date(
+        `${scheduledDate}T${scheduledTime}`,
+      ).toISOString();
+      setScheduling(true);
+      try {
+        await api.post("/api/posts", {
+          content: activeScheduler.content,
+          mediaUrl: activeScheduler.mediaUrl,
+          mediaType: activeScheduler.mediaType,
+          platforms: selectedPlatforms,
+          scheduledFor,
+          status: "scheduled",
+        });
+        toast.success("AI Post scheduled!");
+        setActiveScheduler(null);
+        setSelectedPlatforms([]);
+        setScheduledDate("");
+        setScheduledTime("");
+      } catch (error: any) {
+        toast.error(error?.response?.data?.message || error.message);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const togglePlatform = (platform: string) => {
@@ -82,14 +142,14 @@ const AIComposer = () => {
     setActiveScheduler(null);
   };
 
-  const confirmSchedule = () => {
-    if (!selectedPlatforms.length || !scheduledDate || !scheduledTime) return;
-    setScheduling(true);
-    setTimeout(() => {
-      setScheduling(false);
-      setActiveScheduler(null);
-    }, 1200);
-  };
+  // const confirmSchedule = () => {
+  //   if (!selectedPlatforms.length || !scheduledDate || !scheduledTime) return;
+  //   setScheduling(true);
+  //   setTimeout(() => {
+  //     setScheduling(false);
+  //     setActiveScheduler(null);
+  //   }, 1200);
+  // };
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
@@ -174,11 +234,16 @@ const AIComposer = () => {
               <History className="h-5 w-5 text-slate-500" />
               <h2 className="text-lg">Recent Generations</h2>
             </div>
-            <span className="text-sm text-slate-400">
+            <span className="text-sm text-slate-600">
               {generations.length} total
             </span>
           </div>
 
+          {generations.length === 0 && (
+            <div className="text-gray-400 pt-28 text-center">
+              No content generated yet. try generating some content using the AI
+            </div>
+          )}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {generations.map((gen) => (
               <div
@@ -233,9 +298,7 @@ const AIComposer = () => {
           <div className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 p-5">
-              <h3 className="text-base text-slate-800">
-                Schedule Generation
-              </h3>
+              <h3 className="text-base text-slate-800">Schedule Generation</h3>
               <button
                 type="button"
                 onClick={closeScheduler}
@@ -250,7 +313,7 @@ const AIComposer = () => {
               <p className="whitespace-pre-line text-base leading-relaxed text-slate-600">
                 {activeScheduler.content}
               </p>
-            
+
               {activeScheduler.mediaUrl && (
                 <img
                   src={activeScheduler.mediaUrl}
@@ -310,7 +373,7 @@ const AIComposer = () => {
 
               <button
                 type="button"
-                onClick={confirmSchedule}
+                onClick={handleSchedule}
                 disabled={
                   scheduling ||
                   !selectedPlatforms.length ||
