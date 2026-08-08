@@ -105,7 +105,7 @@ const AIComposer = () => {
           content: activeScheduler.content,
           mediaUrl: activeScheduler.mediaUrl,
           mediaType: activeScheduler.mediaType,
-          platforms: selectedPlatforms,
+          platform: selectedPlatforms,
           scheduledFor,
           status: "scheduled",
         });
@@ -141,15 +141,6 @@ const AIComposer = () => {
     if (scheduling) return;
     setActiveScheduler(null);
   };
-
-  // const confirmSchedule = () => {
-  //   if (!selectedPlatforms.length || !scheduledDate || !scheduledTime) return;
-  //   setScheduling(true);
-  //   setTimeout(() => {
-  //     setScheduling(false);
-  //     setActiveScheduler(null);
-  //   }, 1200);
-  // };
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
