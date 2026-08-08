@@ -85,7 +85,7 @@ const Scheduler = () => {
     return () => {
       if (mediaPreview) URL.revokeObjectURL(mediaPreview);
     };
-  }, [mediaPreview]);
+  }, [mediaPreview]); 
 
   const handleSchedulePost = async () => {
     if (selectedPlatforms.length === 0) {

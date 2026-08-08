@@ -11,9 +11,9 @@ import api from "../api/axios";
 
 interface Activity {
   id: string;
-  status: string;
-  message: string;
-  date: string;
+  actionType: string;
+  description: string;
+  createdAt: string;
 }
 
 const Dashboard = () => {
@@ -94,9 +94,7 @@ const Dashboard = () => {
             className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-red-200 transition-colors"
           >
             <div className="flex items-start justify-between mb-3">
-              <div className="text-4xl text-slate-900">
-                {card.value}
-              </div>
+              <div className="text-4xl text-slate-900">{card.value}</div>
               <div className="flex items-center gap-1 text-red-500 text-sm font-medium">
                 <TrendingUpIcon className="size-3.5" />
                 {card.trend}
@@ -136,18 +134,26 @@ const Dashboard = () => {
                 className="flex items-center justify-between px-6 py-4"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                     <SendIcon className="size-4 text-slate-600" />
                   </div>
                   <div>
-                    <span className="inline-block text-xs font-medium text-slate-600 bg-slate-100 rounded-full px-2.5 py-0.5 mb-1">
-                      {activity.status}
+                    <span className="inline-block text-[11px] text-slate-600 bg-gray-100 rounded-full px-2.5 py-0.5 mb-1">
+                      {activity.actionType}
                     </span>
-                    <p className="text-sm text-slate-800">{activity.message}</p>
+                    <p className="text-sm text-slate-500">
+                      {activity.description}
+                    </p>
                   </div>
                 </div>
-                <span className="text-sm text-slate-400 whitespace-nowrap">
-                  {activity.date}
+                <span className="text-xs text-slate-400 whitespace-nowrap">
+                  {new Date(activity.createdAt).toLocaleString("en-US", {
+                    month: "numeric",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
                 </span>
               </div>
             ))}
