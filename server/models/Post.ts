@@ -29,7 +29,6 @@ const postSchema = new mongoose.Schema(
       enum: ["image", "video"],
     },
 
-    // Changed from String to Array<String>
     platform: {
       type: [
         {

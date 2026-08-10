@@ -169,8 +169,6 @@ export const schedulePost = async (
     let mediaUrl: string | undefined = req.body.mediaUrl;
     let mediaType: "image" | "video" | undefined = req.body.mediaType;
 
-    console.log("Initial mediaUrl:", mediaUrl);
-
     if (req.file) {
       console.log("Uploading file to Cloudinary...");
 
@@ -194,8 +192,6 @@ export const schedulePost = async (
         stream.end(req.file!.buffer);
       });
 
-      console.log("Cloudinary result:", result);
-
       mediaUrl = result.secure_url;
       mediaType = result.resource_type === "video" ? "video" : "image";
     }
@@ -212,24 +208,8 @@ export const schedulePost = async (
       status,
     });
 
-    console.log("MongoDB post created successfully");
-    console.log(post);
-
-    console.log("========== SCHEDULE POST SUCCESS ==========");
-
     return res.status(201).json(post);
   } catch (error: any) {
-    console.log("========== SCHEDULE POST ERROR ==========");
-
-    console.error("Name:", error?.name);
-    console.error("Message:", error?.message);
-    console.error("HTTP Code:", error?.http_code);
-
-    console.error("Stack:");
-    console.error(error?.stack);
-
-    console.error("Entire error:");
-    console.dir(error, { depth: null });
 
     return res.status(500).json({
       success: false,
