@@ -74,12 +74,20 @@ const Dashboard = () => {
     },
   ];
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+
+    if (hour < 12) return "Good morning! 👋";
+    if (hour < 18) return "Good afternoon! 👋";
+    return "Good evening! 👋";
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 space-y-8">
       {/* welcome bar */}
       <div>
         <h2 className="text-2xl font-semibold text-slate-900">
-          Good morning! 👋
+          {getGreeting()}
         </h2>
         <p className="text-slate-500">
           Here's what's happening with your social accounts today.
