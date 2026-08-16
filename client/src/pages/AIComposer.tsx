@@ -182,6 +182,7 @@ const AIComposer = () => {
               <button
                 type="button"
                 disabled
+                onClick={() => setGenerateImage((v) => !v)}
                 className="flex cursor-not-allowed items-center gap-2 rounded-lg bg-slate-100 py-2 pl-3 pr-1.5 text-sm text-slate-400"
               >
                 AI Image
