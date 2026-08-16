@@ -29,7 +29,7 @@ const TONES = ["Professional", "Creative", "Funny", "Minimalist", "Excited"];
 const AIComposer = () => {
   const [prompt, setPrompt] = useState("");
   const [tone, setTone] = useState("Professional");
-  const [generateImage, setGenerateImage] = useState(true);
+  const [generateImage, setGenerateImage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [generations, setGenerations] = useState<Generation[]>([]);
 
@@ -160,9 +160,9 @@ const AIComposer = () => {
           />
 
           <div className="mt-2 flex items-center justify-between sm:justify-end gap-3">
-            <button
+            {/* <button
               type="button"
-              onClick={() => setGenerateImage((v) => !v)}
+              // onClick={() => setGenerateImage((v) => !v)}
               className="flex items-center gap-2 rounded-lg bg-red-50 py-2 pl-3 pr-1.5 text-sm text-slate-800"
             >
               AI Image
@@ -177,7 +177,26 @@ const AIComposer = () => {
                   }`}
                 />
               </span>
-            </button>
+            </button> */}
+            <div className="relative group">
+              <button
+                type="button"
+                disabled
+                onClick={() => setGenerateImage((v) => !v)}
+                className="flex cursor-not-allowed items-center gap-2 rounded-lg bg-slate-100 py-2 pl-3 pr-1.5 text-sm text-slate-400"
+              >
+                AI Image
+                <span className="relative h-5 w-9 rounded-full bg-slate-300">
+                  <span className="absolute left-0.5 top-[2.4px] h-4 w-4 rounded-full bg-white shadow" />
+                </span>
+              </button>
+
+              {/* Tooltip */}
+              <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-3 py-1.5 text-xs text-white shadow-lg group-hover:block">
+                AI Image generation is temporarily unavailable
+                <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+              </div>
+            </div>
 
             <button
               type="button"
